@@ -92,7 +92,7 @@ handler := config.NewConfigHandler[AppConfig](
 ### Types of Configuration Sources
 
 #### Environment Variables (`env` tag)
-Fields tagged with `env:"NAME"` are loaded from environment variables.
+Fields tagged with `env:"NAME"` are loaded from environment variables using [caarlos0/env](https://github.com/caarlos0/env).
 
 #### Command-Line Arguments (`clap` tag)
 Fields tagged with `clap:"name"` are loaded from command-line flags using [go-clap](https://github.com/fred1268/go-clap).
@@ -104,7 +104,6 @@ Fields tagged with `secretfetch:"/path/to/secret"` are loaded from AWS Secrets M
 By default, configuration is loaded in the following order:
 1. Environment variables
 2. Command-line arguments
-3. (Optionally) AWS Secrets Manager
 
 Each loader processes the configuration struct in sequence. If a variable is set by an earlier loader, it may be overridden by a later loader if the same field is present in multiple sources. For example, a value set via an environment variable will be replaced if a command-line argument for the same field is provided, and both may be replaced if a secret is fetched from AWS Secrets Manager for that field.
 
