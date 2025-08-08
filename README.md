@@ -88,7 +88,7 @@ type SecretsConfig struct {
 
 // You'll also need to implement the handler with the AWS Secrets Manager loader:
 handler := config.NewConfigHandler[SecretsConfig](
-	config.WithLoaders(aws.SecretsManagerLoader[SecretsConfig]{}),
+	config.WithLoaders(aws.SecretsManagerLoader[SecretsConfig]{}, config.DefaultConfigLoaders()...),
 )
 ```
 
