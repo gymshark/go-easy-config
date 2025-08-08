@@ -1,7 +1,8 @@
-package config
+package generic
 
 import (
 	"fmt"
+
 	"github.com/fred1268/go-clap/clap"
 )
 

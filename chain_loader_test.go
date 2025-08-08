@@ -3,6 +3,8 @@ package config
 import (
 	"os"
 	"testing"
+
+	"github.com/gymshark/go-easy-config/loader/generic"
 )
 
 type ChainTestConfig struct {
@@ -14,8 +16,8 @@ func TestChainLoader_Load(t *testing.T) {
 	os.Setenv("TEST_ENV_VAR1", "env_value")
 	cfg := &ChainTestConfig{}
 	loaders := []Loader[ChainTestConfig]{
-		&EnvironmentLoader[ChainTestConfig]{},
-		&CommandLineLoader[ChainTestConfig]{Args: []string{"--cmdvar1", "cmd_value"}},
+		&generic.EnvironmentLoader[ChainTestConfig]{},
+		&generic.CommandLineLoader[ChainTestConfig]{Args: []string{"--cmdvar1", "cmd_value"}},
 	}
 	chain := &ChainLoader[ChainTestConfig]{Loaders: loaders}
 	if err := chain.Load(cfg); err != nil {

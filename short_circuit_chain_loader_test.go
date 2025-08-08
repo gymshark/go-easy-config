@@ -3,6 +3,8 @@ package config
 import (
 	"os"
 	"testing"
+
+	"github.com/gymshark/go-easy-config/loader/generic"
 )
 
 type ShortCircuitTestConfig struct {
@@ -15,8 +17,8 @@ func TestShortCircuitChainLoader_Load(t *testing.T) {
 	os.Setenv("TEST_ENV_VAR1", "env_value")
 	cfg := &ShortCircuitTestConfig{SecretVar1: "secret_value"}
 	loaders := []Loader[ShortCircuitTestConfig]{
-		&EnvironmentLoader[ShortCircuitTestConfig]{},
-		&CommandLineLoader[ShortCircuitTestConfig]{Args: []string{"--cmdvar1", "cmd_value", "--envvar1", "env_value"}},
+		&generic.EnvironmentLoader[ShortCircuitTestConfig]{},
+		&generic.CommandLineLoader[ShortCircuitTestConfig]{Args: []string{"--cmdvar1", "cmd_value", "--envvar1", "env_value"}},
 	}
 	chain := &ShortCircuitChainLoader[ShortCircuitTestConfig]{Loaders: loaders}
 	if err := chain.Load(cfg); err != nil {

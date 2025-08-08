@@ -4,6 +4,9 @@ import (
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/gymshark/go-easy-config/loader/generic"
+	"github.com/gymshark/go-easy-config/utils"
 )
 
 type TestConfig struct {
@@ -59,12 +62,12 @@ func TestWithValidator(t *testing.T) {
 }
 
 func TestWithLoaders(t *testing.T) {
-	customLoader := &EnvironmentLoader[TestConfig]{}
+	customLoader := &generic.EnvironmentLoader[TestConfig]{}
 	handler := NewConfigHandler[TestConfig](WithLoaders(customLoader))
 	if len(handler.Loaders) != 1 {
 		t.Errorf("WithLoaders did not set custom loaders")
 	}
-	if _, ok := handler.Loaders[0].(*EnvironmentLoader[TestConfig]); !ok {
+	if _, ok := handler.Loaders[0].(*generic.EnvironmentLoader[TestConfig]); !ok {
 		t.Errorf("WithLoaders did not set correct loader type")
 	}
 }
@@ -102,7 +105,7 @@ func TestIsZero_AllTypes(t *testing.T) {
 		{reflect.ValueOf(slice), true},
 	}
 	for i, c := range cases {
-		if got := isZero(c.val); got != c.want {
+		if got := utils.IsZero(c.val); got != c.want {
 			t.Errorf("isZero case %d failed: got %v, want %v", i, got, c.want)
 		}
 	}
@@ -111,7 +114,7 @@ func TestIsZero_AllTypes(t *testing.T) {
 func BenchmarkEnvironmentLoader_Load(b *testing.B) {
 	os.Setenv("TEST_ENV_VAR1", EnvValue)
 	cfg := &TestConfig{}
-	loader := &EnvironmentLoader[TestConfig]{}
+	loader := &generic.EnvironmentLoader[TestConfig]{}
 	for i := 0; i < b.N; i++ {
 		_ = loader.Load(cfg)
 	}
@@ -120,7 +123,7 @@ func BenchmarkEnvironmentLoader_Load(b *testing.B) {
 func BenchmarkCommandLineLoader_Load(b *testing.B) {
 	cfg := &TestConfig{}
 	args := []string{"--cmdvar1", CmdValue}
-	loader := &CommandLineLoader[TestConfig]{Args: args}
+	loader := &generic.CommandLineLoader[TestConfig]{Args: args}
 	for i := 0; i < b.N; i++ {
 		_ = loader.Load(cfg)
 	}
@@ -130,8 +133,8 @@ func BenchmarkChainLoader_Load(b *testing.B) {
 	os.Setenv("TEST_ENV_VAR1", EnvValue)
 	cfg := &TestConfig{}
 	loaders := []Loader[TestConfig]{
-		&EnvironmentLoader[TestConfig]{},
-		&CommandLineLoader[TestConfig]{Args: []string{"--cmdvar1", CmdValue}},
+		&generic.EnvironmentLoader[TestConfig]{},
+		&generic.CommandLineLoader[TestConfig]{Args: []string{"--cmdvar1", CmdValue}},
 	}
 	chain := &ChainLoader[TestConfig]{Loaders: loaders}
 	for i := 0; i < b.N; i++ {
@@ -161,8 +164,8 @@ func BenchmarkShortCircuitChainLoader_Load(b *testing.B) {
 	os.Setenv("TEST_ENV_VAR1", EnvValue)
 	cfg := &TestConfig{}
 	loaders := []Loader[TestConfig]{
-		&EnvironmentLoader[TestConfig]{},
-		&CommandLineLoader[TestConfig]{Args: []string{"--cmdvar1", CmdValue}},
+		&generic.EnvironmentLoader[TestConfig]{},
+		&generic.CommandLineLoader[TestConfig]{Args: []string{"--cmdvar1", CmdValue}},
 	}
 	chain := &ShortCircuitChainLoader[TestConfig]{Loaders: loaders}
 	for i := 0; i < b.N; i++ {

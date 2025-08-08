@@ -25,6 +25,7 @@ A lightweight configuration loader and validator for Go applications. Supports e
 - Load configuration from environment variables
 - Parse command-line flags
 - Fetch secrets from AWS Secrets Manager (optional)
+- Load configuration from INI, JSON, and YAML files or byte arrays
 - Validate configuration using go-playground/validator
 - Modular loader design for extensibility
 
@@ -42,7 +43,11 @@ go get github.com/gymshark/go-easy-config
 package main
 
 import (
-	"github.com/gymshark/go-easy-config"
+	"github.com/gymshark/go-easy-config" // Core package including chain loaders and interfaces
+	
+	// (OPTIONAL) Import sub packagaes for custom loaders and validators
+	"github.com/gymshark/go-easy-config/loader/aws" // Provides AWS specific loaders
+	"github.com/gymshark/go-easy-config/loader/generic" // Provides generic loaders (environment, command-line, ini, json, yaml)
 )
 
 type AppConfig struct {
@@ -104,14 +109,24 @@ Fields tagged with `clap:"name"` are loaded from command-line flags using [go-cl
 #### AWS Secrets Manager (`secretfetch` tag)
 Fields tagged with `secretfetch:"/path/to/secret"` are loaded from AWS Secrets Manager using [secretfetch](https://github.com/crazywolf132/secretfetch).
 
+#### INI Files or Byte Arrays (`ini` tag)
+Fields can be loaded from INI files or byte arrays using [go-ini/ini](https://github.com/go-ini/ini).
+
+#### JSON Files or Byte Arrays (`json` tag)
+Fields can be loaded from JSON files or byte arrays using the Go standard library [encoding/json](https://pkg.go.dev/encoding/json).
+
+#### YAML Files or Byte Arrays (`yaml` tag)
+Fields can be loaded from YAML files or byte arrays using [gopkg.in/yaml.v3](https://pkg.go.dev/gopkg.in/yaml.v3).
+
 ### Loader Order and Customisation
+
 By default, configuration is loaded in the following order:
 1. Environment variables
 2. Command-line arguments
 
 Each loader processes the configuration struct in sequence. If a variable is set by an earlier loader, it may be overridden by a later loader if the same field is present in multiple sources. For example, a value set via an environment variable will be replaced if a command-line argument for the same field is provided, and both may be replaced if a secret is fetched from AWS Secrets Manager for that field.
 
-You can customise the loader order and add/remove loaders using `WithLoaders`.
+You can customise the loader order and override loaders using `WithLoaders`.
 
 #### Custom Loader Order Example
 
@@ -119,19 +134,38 @@ To specify your own loader order:
 
 ```go
 import (
-	"github.com/gymshark/go-easy-config"
 	"os"
+	
+	"github.com/gymshark/go-easy-config"
+	"github.com/gymshark/go-easy-config/loader/generic"
+	"github.com/gymshark/go-easy-config/loader/aws"
 )
 
-loaders := []config.Loader[AppConfig]{
-	&config.CommandLineLoader[AppConfig]{Args: os.Args[1:]},
-	&config.EnvironmentLoader[AppConfig]{},
-	&config.SecretsManagerLoader[AppConfig]{},
-}
+// Pass in individual loaders
 handler := config.NewConfigHandler[AppConfig](
-	config.WithLoaders(loaders...),
+	config.WithLoaders(
+        &generic.CommandLineLoader[AppConfig]{Args: os.Args[1:]},
+        &generic.EnvironmentLoader[AppConfig]{},
+        &aws.SecretsManagerLoader[AppConfig]{},
+    ),
+)
+
+// Pass in a chain loader
+chain := []config.ChainLoader[AppConfig]{
+	Loaders: []config.Loader[AppConfig]{
+        &generic.CommandLineLoader[AppConfig]{Args: os.Args[1:]},
+        &generic.EnvironmentLoader[AppConfig]{},
+        &aws.SecretsManagerLoader[AppConfig]{},
+    }
+}
+
+handler := config.NewConfigHandler[AppConfig](
+    config.WithLoaders(chain)
 )
 ```
+
+> Note, passing a chain loader into the `WithLoaders` option will wrap it in another chain loader. This allows very complex loader chains to be constructed, but you should be careful to avoid infinite loops or excessive processing.
+
 
 #### ShortCircuitChainLoader (Optional Short-Circuiting)
 
@@ -139,16 +173,20 @@ If you want to stop loading as soon as all exported fields in your configuration
 
 ```go
 loaders := []config.Loader[AppConfig]{
-	&config.EnvironmentLoader[AppConfig]{},
-	&config.CommandLineLoader[AppConfig]{Args: os.Args[1:]},
+	&generic.EnvironmentLoader[AppConfig]{},
+	&generic.CommandLineLoader[AppConfig]{Args: os.Args[1:]},
 }
 chain := &config.ShortCircuitChainLoader[AppConfig]{Loaders: loaders}
-err := chain.Load(&cfg)
+
+handler := config.NewConfigHandler[AppConfig](
+    config.WithLoaders(chain),
+)
 ```
 
 This loader will stop processing further loaders as soon as all exported fields are set, which can improve efficiency if not all sources are needed. The standard `ChainLoader` always runs all loaders in sequence.
 
 #### Providing Your Own Chain Loader
+
 A chain loader orchestrates multiple loaders, executing them in sequence. Each loader may override values set by previous loaders. The chain loader delegates to each loader in turn.
 
 A loader is a single component that implements the `Loader` interface and loads configuration from a specific source.
@@ -156,13 +194,17 @@ A loader is a single component that implements the `Loader` interface and loads 
 Example chain loader:
 
 ```go
+import (
+    "github.com/gymshark/go-easy-config/loader"
+)
+
 type CustomChainLoader[T any] struct {
-	Loaders []config.Loader[T]
+	Loaders []loader.Loader[T]
 }
 
 func (l *CustomChainLoader[T]) Load(c *T) error {
-	for _, loader := range l.Loaders {
-		if err := loader.Load(c); err != nil {
+	for _, lo := range l.Loaders {
+		if err := lo.Load(c); err != nil {
 			return err
 		}
 	}
@@ -171,6 +213,8 @@ func (l *CustomChainLoader[T]) Load(c *T) error {
 ```
 
 Use your custom chain loader to control the order and logic of configuration loading, including conditional logic or error handling.
+
+> The ShortCircuitChainLoader is an example of a custom chain loader.
 
 #### Providing Your Own Loader
 
@@ -198,9 +242,9 @@ func (f *FileLoader[T]) Load(c *T) error {
 Use your custom loader in the loader chain:
 
 ```go
-loaders := []config.Loader[AppConfig]{
+loaders := []loader.Loader[AppConfig]{
 	&FileLoader[AppConfig]{Path: "config.yaml"},
-	&config.EnvironmentLoader[AppConfig]{},
+	&generic.EnvironmentLoader[AppConfig]{},
 }
 handler := config.NewConfigHandler[AppConfig](
 	config.WithLoaders(loaders...),

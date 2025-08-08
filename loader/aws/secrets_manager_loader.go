@@ -1,8 +1,9 @@
-package config
+package aws
 
 import (
 	"context"
 	"fmt"
+
 	"github.com/crazywolf132/secretfetch"
 )
 

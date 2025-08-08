@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+
+	"github.com/gymshark/go-easy-config/utils"
 )
 
 type ShortCircuitChainLoader[T any] struct {
@@ -16,7 +18,7 @@ func (l *ShortCircuitChainLoader[T]) Load(c *T) error {
 		if loader == nil {
 			return fmt.Errorf("ShortCircuitChainLoader loader at index %d is nil", i)
 		}
-		if isConfigFullyPopulated(c) {
+		if utils.IsConfigFullyPopulated(c) {
 			break
 		}
 		if err := loader.Load(c); err != nil {

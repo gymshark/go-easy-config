@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/go-playground/validator/v10"
 	"testing"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type TestStructRequiredIfAllSet struct {
