@@ -85,6 +85,11 @@ To fetch secrets, add fields with the `secretfetch` tag and configure AWS creden
 type SecretsConfig struct {
 	DBPassword string `secretfetch:"/prod/db/password"`
 }
+
+// You'll also need to implement the handler with the AWS Secrets Manager loader:
+handler := config.NewConfigHandler[SecretsConfig](
+	config.WithLoaders(aws.SecretsManagerLoader[SecretsConfig]{}),
+)
 ```
 
 ### Customising Loaders and Validators
