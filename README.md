@@ -64,6 +64,10 @@ func main() {
 	if err := handler.Validate(&cfg); err != nil {
 		panic(err)
 	}
+	// You can also use the LoadAndValidate method:
+	if err := handler.LoadAndValidate(&cfg); err != nil {
+		panic(err)
+	}
 	// Use cfg...
 }
 ```
