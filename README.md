@@ -213,13 +213,23 @@ Env  string `validate:"required,oneof=dev prod"`
 ```
 
 ### Advanced Validation
+
 Custom validation tags supported:
+
 - `required_if_all_set=FieldA FieldB`
+  Ensures the field is required if all listed fields are set (non-zero).
 - `required_if_none_set=FieldA FieldB`
+  Ensures the field is required if none of the listed fields are set (all zero).
 - `required_if_one_set=FieldA FieldB`
+  Ensures the field is required if exactly one of the listed fields is set (non-zero).
 - `required_if_none_set_or_one_set=FieldA FieldB`
+  Ensures the field is required if either none or exactly one of the listed fields is set.
 - `required_if_at_most_one_set=FieldA FieldB`
+  Ensures the field is required if at most one of the listed fields is set (zero or one).
 - `required_if_at_most_one_not_set=FieldA FieldB`
+  Ensures the field is required if at most one of the listed fields is not set (zero or one unset).
+
+These tags allow for conditional validation logic based on the state of other fields in the struct. For example, you can require a field only if certain other fields are present or absent, supporting complex configuration requirements.
 
 See `validator_test.go` for usage examples.
 
