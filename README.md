@@ -50,8 +50,8 @@ import (
 	"github.com/gymshark/go-easy-config" // Core package including chain loaders and interfaces
 	
 	// (OPTIONAL) Import sub packagaes for custom loaders and validators
-	"github.com/gymshark/go-easy-config/loader/aws" // Provides AWS specific loaders
-	"github.com/gymshark/go-easy-config/loader/generic" // Provides generic loaders (environment, command-line, ini, json, yaml)
+	awsloaders "github.com/gymshark/go-easy-config/loader/aws" // Provides AWS specific loaders
+	genericloaders "github.com/gymshark/go-easy-config/loader/generic" // Provides generic loaders (environment, command-line, ini, json, yaml)
 )
 
 type AppConfig struct {
@@ -86,13 +86,17 @@ func main() {
 To fetch secrets, add fields with the `secretfetch` tag and configure AWS credentials:
 
 ```go
+import (
+	awsloaders "github.com/gymshark/go-easy-config/loader/aws"
+)
+
 type SecretsConfig struct {
 	DBPassword string `secretfetch:"/prod/db/password"`
 }
 
 // You'll also need to implement the handler with the AWS Secrets Manager loader:
 handler := config.NewConfigHandler[SecretsConfig](
-	config.WithLoaders(aws.SecretsManagerLoader[SecretsConfig]{}, config.DefaultConfigLoaders()...),
+	config.WithLoaders(awsloaders.SecretsManagerLoader[SecretsConfig]{}, config.DefaultConfigLoaders()...),
 )
 ```
 
