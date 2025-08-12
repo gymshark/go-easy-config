@@ -1,5 +1,8 @@
+<style>
+.logo { width: 50%; border-radius: 24px; }
+</style>
 <div align="center">
-  <img src="logo.png" alt="go-easy-config logo" width="50%" style="border-radius: 16px;" />
+  <img class="logo" src="logo.png" alt="go-easy-config logo" />
 </div>
 
 # go-easy-config
