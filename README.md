@@ -306,8 +306,6 @@ To measure performance and memory usage, run benchmarks with:
 go test -bench . -benchmem
 ```
 
-This will report execution speed and memory allocations for all loaders and handlers, helping you track efficiency and identify areas for optimisation.
-
 ## License
 
 MIT
