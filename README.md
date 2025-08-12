@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="logo.png" alt="go-easy-config logo" width="50%" style="border-radius: 16px;" />
+</div>
+
 # go-easy-config
 
 A lightweight configuration loader and validator for Go applications. Supports environment variables, command-line flags, and optional AWS Secrets Manager integration via secretfetch.
