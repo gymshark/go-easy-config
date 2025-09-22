@@ -6,10 +6,12 @@ import (
 	"os"
 )
 
+// JSONLoader loads configuration from JSON files or byte arrays.
 type JSONLoader[T any] struct {
-	Source interface{}
+	Source interface{} // Either a file path (string) or raw JSON data ([]byte)
 }
 
+// Load populates configuration from JSON source.
 func (j *JSONLoader[T]) Load(c *T) error {
 	var data []byte
 	var err error

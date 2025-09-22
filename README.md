@@ -91,7 +91,7 @@ import (
 )
 
 type SecretsConfig struct {
-	DBPassword string `secretfetch:"/prod/db/password"`
+	DBPassword string `secret:"aws=prod/db/password"`
 }
 
 // You'll also need to implement the handler with the AWS Secrets Manager loader:
@@ -106,8 +106,8 @@ You can provide custom loaders or validators:
 
 ```go
 handler := config.NewConfigHandler[AppConfig](
-	config.WithValidator(customValidator),
-	config.WithLoaders(customLoader),
+	config.WithValidator[AppConfig](customValidator),
+	config.WithLoaders[AppConfig](customLoader),
 )
 ```
 
@@ -119,8 +119,8 @@ Fields tagged with `env:"NAME"` are loaded from environment variables using [caa
 #### Command-Line Arguments (`clap` tag)
 Fields tagged with `clap:"name"` are loaded from command-line flags using [go-clap](https://github.com/fred1268/go-clap).
 
-#### AWS Secrets Manager (`secretfetch` tag)
-Fields tagged with `secretfetch:"/path/to/secret"` are loaded from AWS Secrets Manager using [secretfetch](https://github.com/crazywolf132/secretfetch).
+#### AWS Secrets Manager (`secret` tag)
+Fields tagged with `secret:"aws=path/to/secret"` are loaded from AWS Secrets Manager using [secretfetch](https://github.com/crazywolf132/secretfetch).
 
 #### INI Files or Byte Arrays (`ini` tag)
 Fields can be loaded from INI files or byte arrays using [go-ini/ini](https://github.com/go-ini/ini).
@@ -133,7 +133,7 @@ Fields can be loaded from YAML files or byte arrays using [gopkg.in/yaml.v3](htt
 
 ### Loader Order and Customisation
 
-By default, configuration is loaded in the following order:
+By default, the configuration is loaded in the following order:
 1. Environment variables
 2. Command-line arguments
 
@@ -146,6 +146,8 @@ You can customise the loader order and override loaders using `WithLoaders`.
 To specify your own loader order:
 
 ```go
+package main
+
 import (
 	"os"
 	

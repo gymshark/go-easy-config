@@ -1,7 +1,10 @@
+// Package utils provides utility functions for configuration handling.
 package utils
 
 import "reflect"
 
+// IsConfigFullyPopulated checks if all exported fields in a configuration struct are non-zero.
+// This is used by ShortCircuitChainLoader to determine when to stop loading.
 func IsConfigFullyPopulated[T any](c *T) bool {
 	if c == nil {
 		return false
@@ -17,7 +20,7 @@ func IsConfigFullyPopulated[T any](c *T) bool {
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		structField := t.Field(i)
-		if structField.PkgPath != "" { // skip unexported
+		if structField.PkgPath != "" { // skip unexported fields
 			continue
 		}
 		if IsZero(field) {
@@ -27,6 +30,9 @@ func IsConfigFullyPopulated[T any](c *T) bool {
 	return true
 }
 
+// IsZero determines if a reflect.Value represents a zero value for its type.
+// This provides more comprehensive zero-checking than reflect.Value.IsZero(),
+// including proper handling of interfaces and arrays.
 func IsZero(v reflect.Value) bool {
 	switch v.Kind() {
 	case reflect.Chan, reflect.Map, reflect.Slice, reflect.Ptr:
@@ -43,6 +49,7 @@ func IsZero(v reflect.Value) bool {
 		// For other types, recursively check if the underlying value is zero
 		return IsZero(underlying)
 	case reflect.Array:
+		// Array is zero if all elements are zero
 		for i := 0; i < v.Len(); i++ {
 			if !IsZero(v.Index(i)) {
 				return false

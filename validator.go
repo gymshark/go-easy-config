@@ -6,6 +6,8 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// NewValidator creates a validator with custom validation rules for conditional field requirements.
+// These rules allow complex validation logic based on the state of other fields in the struct.
 func NewValidator() validator.Validate {
 	validate := validator.New()
 

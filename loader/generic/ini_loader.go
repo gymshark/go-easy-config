@@ -6,15 +6,14 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+// IniLoader loads configuration from INI files or byte arrays.
 type IniLoader[T any] struct {
-	// Source can be the raw ini data (byte array) or a path to a file
-	Source      interface{}
-	LoadOptions ini.LoadOptions
-
-	// INI is the exposed INI file data structure
-	INI *ini.File
+	Source      interface{}       // Either a file path (string) or raw INI data ([]byte)
+	LoadOptions ini.LoadOptions   // Options for INI parsing
+	INI         *ini.File         // Parsed INI file data structure (populated after Load)
 }
 
+// Load populates configuration from INI source using struct tags.
 func (i *IniLoader[T]) Load(c *T) error {
 	data, err := ini.LoadSources(i.LoadOptions, i.Source)
 	if err != nil {
