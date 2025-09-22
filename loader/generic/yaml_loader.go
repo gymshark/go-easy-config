@@ -7,10 +7,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// YAMLLoader loads configuration from YAML files or byte arrays.
 type YAMLLoader[T any] struct {
-	Source interface{}
+	Source interface{} // Either a file path (string) or raw YAML data ([]byte)
 }
 
+// Load populates configuration from YAML source.
 func (y *YAMLLoader[T]) Load(c *T) error {
 	var data []byte
 	var err error
