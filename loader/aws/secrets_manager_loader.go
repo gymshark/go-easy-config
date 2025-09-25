@@ -4,9 +4,9 @@ package aws
 import (
 	"context"
 	"fmt"
-	"os"
+	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/crazywolf132/secretfetch"
 )
 
@@ -24,32 +24,32 @@ type SecretsManagerLoader[T any] struct {
 func (s *SecretsManagerLoader[T]) Load(c *T) error {
 	opts := s.SecretFetchOpts
 	if opts == nil {
-		// Use default AWS configuration with region from environment or us-east-1
-		awsRegion := os.Getenv("AWS_REGION")
-		if awsRegion == "" {
-			awsRegion = "us-east-1"
+		cfg, err := config.LoadDefaultConfig(context.TODO())
+		if err != nil {
+			log.Fatalf("error loading AWS config: %v", err)
 		}
+		
 		opts = &secretfetch.Options{
-			AWS: &aws.Config{Region: awsRegion},
+			AWS: &cfg,
 		}
 	}
-	
+
 	// Check if any fields have secret tags before calling secretfetch
 	if !hasSecretTags(c) {
 		return nil // No secret fields to process
 	}
-	
+
 	// Create a temporary struct with only secret-tagged fields
 	tempStruct, fieldMap, err := createSecretOnlyStruct(c)
 	if err != nil {
 		return fmt.Errorf("error creating secret-only struct: %w", err)
 	}
-	
+
 	// Fetch secrets into the temporary struct
 	if err := secretfetch.Fetch(context.Background(), tempStruct, opts); err != nil {
 		return fmt.Errorf("error fetching secrets: %w", err)
 	}
-	
+
 	// Copy values back to the original struct
 	return copySecretValues(c, tempStruct, fieldMap)
 }
