@@ -4,6 +4,7 @@ go 1.24
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.32.6
+	github.com/aws/aws-sdk-go-v2/config v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.34.7
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/crazywolf132/secretfetch v0.1.5
@@ -16,7 +17,6 @@ require (
 
 require (
 	github.com/aws/aws-sdk-go v1.34.0 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.28.6 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.47 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.21 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.25 // indirect

@@ -3,11 +3,10 @@ package aws
 
 import (
 	"context"
-	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/crazywolf132/secretfetch"
+	"github.com/gymshark/go-easy-config/loader"
 )
 
 // SecretsManagerLoader loads configuration values from AWS Secrets Manager.
@@ -26,9 +25,13 @@ func (s *SecretsManagerLoader[T]) Load(c *T) error {
 	if opts == nil {
 		cfg, err := config.LoadDefaultConfig(context.TODO())
 		if err != nil {
-			log.Fatalf("error loading AWS config: %v", err)
+			return &loader.LoaderError{
+				LoaderType: "SecretsManagerLoader",
+				Operation:  "create AWS config",
+				Err:        err,
+			}
 		}
-		
+
 		opts = &secretfetch.Options{
 			AWS: &cfg,
 		}
@@ -42,12 +45,20 @@ func (s *SecretsManagerLoader[T]) Load(c *T) error {
 	// Create a temporary struct with only secret-tagged fields
 	tempStruct, fieldMap, err := createSecretOnlyStruct(c)
 	if err != nil {
-		return fmt.Errorf("error creating secret-only struct: %w", err)
+		return &loader.LoaderError{
+			LoaderType: "SecretsManagerLoader",
+			Operation:  "create secret-only struct",
+			Err:        err,
+		}
 	}
 
 	// Fetch secrets into the temporary struct
 	if err := secretfetch.Fetch(context.Background(), tempStruct, opts); err != nil {
-		return fmt.Errorf("error fetching secrets: %w", err)
+		return &loader.LoaderError{
+			LoaderType: "SecretsManagerLoader",
+			Operation:  "fetch secrets",
+			Err:        err,
+		}
 	}
 
 	// Copy values back to the original struct

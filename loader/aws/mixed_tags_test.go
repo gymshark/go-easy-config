@@ -19,7 +19,7 @@ type MixedTagsConfig struct {
 
 func TestSecretsManagerLoader_MixedTags(t *testing.T) {
 	cfg := &MixedTagsConfig{}
-	
+
 	mockClient := &mockSecretsManagerClient{
 		getSecretValueFn: func(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error) {
 			return &secretsmanager.GetSecretValueOutput{
@@ -27,25 +27,25 @@ func TestSecretsManagerLoader_MixedTags(t *testing.T) {
 			}, nil
 		},
 	}
-	
+
 	loader := &SecretsManagerLoader[MixedTagsConfig]{
 		SecretFetchOpts: &secretfetch.Options{
 			AWS:            &aws.Config{Region: "us-east-1"},
 			SecretsManager: mockClient,
 		},
 	}
-	
+
 	// This should now succeed with the mixed tags handling
 	err := loader.Load(cfg)
 	if err != nil {
 		t.Fatalf("expected no error with mixed tags handling, got: %v", err)
 	}
-	
+
 	// Verify the secret field was populated
 	if cfg.SecretValue != "secret-from-aws" {
 		t.Errorf("expected SecretValue to be 'secret-from-aws', got '%s'", cfg.SecretValue)
 	}
-	
+
 	// Verify other fields remain unchanged (they should be empty since we didn't set them)
 	if cfg.EnvValue != "" {
 		t.Errorf("expected EnvValue to remain empty, got '%s'", cfg.EnvValue)
@@ -63,27 +63,27 @@ type NoSecretTagsConfig struct {
 
 func TestSecretsManagerLoader_NoSecretTags(t *testing.T) {
 	cfg := &NoSecretTagsConfig{}
-	
+
 	mockClient := &mockSecretsManagerClient{
 		getSecretValueFn: func(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error) {
 			t.Error("mock should not be called when there are no secret tags")
 			return nil, nil
 		},
 	}
-	
+
 	loader := &SecretsManagerLoader[NoSecretTagsConfig]{
 		SecretFetchOpts: &secretfetch.Options{
 			AWS:            &aws.Config{Region: "us-east-1"},
 			SecretsManager: mockClient,
 		},
 	}
-	
+
 	// This should succeed and do nothing
 	err := loader.Load(cfg)
 	if err != nil {
 		t.Fatalf("expected no error when no secret tags present, got: %v", err)
 	}
-	
+
 	// Verify fields remain unchanged
 	if cfg.EnvValue != "" {
 		t.Errorf("expected EnvValue to remain empty, got '%s'", cfg.EnvValue)

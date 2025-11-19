@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"github.com/gymshark/go-easy-config/loader"
 	"github.com/ianlopshire/go-ssm-config"
 )
 
@@ -12,5 +13,13 @@ type SSMParameterStoreLoader[T any] struct {
 
 // Load fetches parameters from SSM Parameter Store for fields with appropriate tags.
 func (s *SSMParameterStoreLoader[T]) Load(c *T) error {
-	return ssmconfig.Process(s.Path, c)
+	if err := ssmconfig.Process(s.Path, c); err != nil {
+		return &loader.LoaderError{
+			LoaderType: "SSMParameterStoreLoader",
+			Operation:  "fetch parameters",
+			Source:     s.Path,
+			Err:        err,
+		}
+	}
+	return nil
 }
