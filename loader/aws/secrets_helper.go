@@ -16,7 +16,7 @@ func hasSecretTags(c interface{}) bool {
 	if v.Kind() != reflect.Struct {
 		return false
 	}
-	
+
 	t := v.Type()
 	for i := 0; i < v.NumField(); i++ {
 		field := t.Field(i)
@@ -39,11 +39,11 @@ func createSecretOnlyStruct(c interface{}) (interface{}, map[string]int, error) 
 	if v.Kind() != reflect.Struct {
 		return nil, nil, fmt.Errorf("expected struct, got %T", c)
 	}
-	
+
 	t := v.Type()
 	var fields []reflect.StructField
 	fieldMap := make(map[string]int) // maps temp struct field index to original struct field index
-	
+
 	for i := 0; i < v.NumField(); i++ {
 		field := t.Field(i)
 		if field.PkgPath != "" { // skip unexported fields
@@ -54,15 +54,15 @@ func createSecretOnlyStruct(c interface{}) (interface{}, map[string]int, error) 
 			fields = append(fields, field)
 		}
 	}
-	
+
 	if len(fields) == 0 {
 		return nil, nil, nil // No secret fields
 	}
-	
+
 	// Create new struct type with only secret fields
 	newType := reflect.StructOf(fields)
 	newStruct := reflect.New(newType).Interface()
-	
+
 	return newStruct, fieldMap, nil
 }
 
@@ -72,27 +72,27 @@ func copySecretValues(original, temp interface{}, fieldMap map[string]int) error
 	if origVal.Kind() == reflect.Ptr {
 		origVal = origVal.Elem()
 	}
-	
+
 	tempVal := reflect.ValueOf(temp)
 	if tempVal.Kind() == reflect.Ptr {
 		tempVal = tempVal.Elem()
 	}
-	
+
 	tempType := tempVal.Type()
 	for i := 0; i < tempVal.NumField(); i++ {
 		tempField := tempVal.Field(i)
 		fieldName := tempType.Field(i).Name
-		
+
 		origIndex, exists := fieldMap[fieldName]
 		if !exists {
 			continue
 		}
-		
+
 		origField := origVal.Field(origIndex)
 		if origField.CanSet() && !tempField.IsZero() {
 			origField.Set(tempField)
 		}
 	}
-	
+
 	return nil
 }

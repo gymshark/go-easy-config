@@ -22,11 +22,13 @@ type Option[C any] func(*Handler[C])
 type Handler[C any] struct {
 	Validator   *validator.Validate
 	Loaders     []Loader[C]
-	chainLoader *ChainLoader[C] // Internal chain loader for executing loaders in sequence
+	chainLoader *InterpolatingChainLoader[C] // Internal chain loader with interpolation support
 }
 
 // NewConfigHandler creates a new configuration handler with default loaders and validator.
 // Default loaders include environment variables and command-line arguments.
+// The handler uses InterpolatingChainLoader which automatically detects and handles
+// variable interpolation in struct tags while maintaining full backward compatibility.
 func NewConfigHandler[C any](options ...Option[C]) *Handler[C] {
 	loaders := DefaultConfigLoaders[C]()
 	handler := &Handler[C]{
@@ -38,7 +40,7 @@ func NewConfigHandler[C any](options ...Option[C]) *Handler[C] {
 			opt(handler)
 		}
 	}
-	handler.chainLoader = &ChainLoader[C]{Loaders: handler.Loaders}
+	handler.chainLoader = &InterpolatingChainLoader[C]{Loaders: handler.Loaders}
 	return handler
 }
 
@@ -50,17 +52,19 @@ func WithValidator[C any](v *validator.Validate) Option[C] {
 		}
 		h.Validator = v
 		// Ensure chainLoader is up to date
-		h.chainLoader = &ChainLoader[C]{Loaders: h.Loaders}
+		h.chainLoader = &InterpolatingChainLoader[C]{Loaders: h.Loaders}
 	}
 }
 
 // WithLoaders sets custom loaders for the configuration handler.
 // Loaders are executed in the order provided.
+// The InterpolatingChainLoader automatically handles variable interpolation
+// while maintaining the specified loader precedence.
 func WithLoaders[C any](loaders ...Loader[C]) Option[C] {
 	return func(h *Handler[C]) {
 		h.Loaders = loaders
 		// Ensure chainLoader is up to date
-		h.chainLoader = &ChainLoader[C]{Loaders: h.Loaders}
+		h.chainLoader = &InterpolatingChainLoader[C]{Loaders: h.Loaders}
 	}
 }
 
@@ -70,8 +74,18 @@ func (c *Handler[C]) Load(cfg *C) error {
 }
 
 // Validate validates the configuration struct using the configured validator.
+// Returns ValidationError wrapping any validator errors for consistent error handling.
 func (c *Handler[C]) Validate(cfg *C) error {
-	return c.Validator.Struct(cfg)
+	err := c.Validator.Struct(cfg)
+	if err != nil {
+		// Wrap validator error in ValidationError for consistency
+		return &ValidationError{
+			FieldName: "<multiple>",
+			Rule:      "<multiple>",
+			Err:       err,
+		}
+	}
+	return nil
 }
 
 // LoadAndValidate loads and then validates the configuration in a single operation.

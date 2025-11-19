@@ -1,9 +1,8 @@
 package generic
 
 import (
-	"fmt"
-
 	"github.com/fred1268/go-clap/clap"
+	"github.com/gymshark/go-easy-config/loader"
 )
 
 // CommandLineLoader loads configuration from command-line arguments.
@@ -16,7 +15,11 @@ type CommandLineLoader[T any] struct {
 func (cmd *CommandLineLoader[T]) Load(c *T) error {
 	_, err := clap.Parse(cmd.Args, c)
 	if err != nil {
-		return fmt.Errorf("error parsing command line arguments: %w", err)
+		return &loader.LoaderError{
+			LoaderType: "CommandLineLoader",
+			Operation:  "parse command line arguments",
+			Err:        err,
+		}
 	}
 	return nil
 }

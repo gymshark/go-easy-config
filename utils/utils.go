@@ -4,7 +4,7 @@ package utils
 import "reflect"
 
 // IsConfigFullyPopulated checks if all exported fields in a configuration struct are non-zero.
-// This is used by ShortCircuitChainLoader to determine when to stop loading.
+// This is used by InterpolatingChainLoader with ShortCircuit enabled to determine when to stop loading.
 func IsConfigFullyPopulated[T any](c *T) bool {
 	if c == nil {
 		return false

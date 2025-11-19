@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gymshark/go-easy-config/loader"
 	"gopkg.in/yaml.v3"
 )
 
@@ -16,21 +17,39 @@ type YAMLLoader[T any] struct {
 func (y *YAMLLoader[T]) Load(c *T) error {
 	var data []byte
 	var err error
+	var source string
 
 	switch src := y.Source.(type) {
 	case string:
+		source = src
 		data, err = os.ReadFile(src)
 		if err != nil {
-			return fmt.Errorf("error reading yaml file: %w", err)
+			return &loader.LoaderError{
+				LoaderType: "YAMLLoader",
+				Operation:  "read file",
+				Source:     source,
+				Err:        err,
+			}
 		}
 	case []byte:
 		data = src
+		source = "<bytes>"
 	default:
-		return fmt.Errorf("unsupported source type: %T", src)
+		return &loader.LoaderError{
+			LoaderType: "YAMLLoader",
+			Operation:  "validate source type",
+			Source:     fmt.Sprintf("%T", src),
+			Err:        fmt.Errorf("unsupported source type"),
+		}
 	}
 
 	if err := yaml.Unmarshal(data, c); err != nil {
-		return fmt.Errorf("error unmarshalling yaml: %w", err)
+		return &loader.LoaderError{
+			LoaderType: "YAMLLoader",
+			Operation:  "unmarshal YAML",
+			Source:     source,
+			Err:        err,
+		}
 	}
 	return nil
 }
